@@ -289,7 +289,6 @@ public class ShiftWorld {
 	                        if (pos.getValue().size() > 1) {
 	                            double newY = pos.getValue().get(1).getValue() + shiftAmount;
 	                            pos.getValue().set(1, new DoubleTag("", newY));
-	                            System.out.println("Updated Pos Y: " + newY); // Debug statement
 	                        }
 	                    });
 	                });
@@ -298,7 +297,6 @@ public class ShiftWorld {
 	                entityData.getAsIntTag("TileY").ifPresent(tileYTag -> {
 	                    int newY = tileYTag.getValue() + shiftAmount;
 	                    entityData.getValue().put("TileY", new IntTag("TileY", newY));
-	                    System.out.println("Updated TileY: " + newY); // Debug statement
 	                });
 
 	                // Shift the "Paper.Origin" tag
@@ -307,7 +305,6 @@ public class ShiftWorld {
 	                        if (origin.getValue().size() > 1) {
 	                            double newY = origin.getValue().get(1).getValue() + shiftAmount;
 	                            origin.getValue().set(1, new DoubleTag("", newY));
-	                            System.out.println("Updated Paper.Origin Y: " + newY); // Debug statement
 	                        }
 	                    });
 	                });
