@@ -23,16 +23,16 @@ public class ShiftWorld {
 	private static AtomicInteger processedChunks = new AtomicInteger(0);
 
 	public static void main(String[] args) throws IOException {
+		System.out.println("MC World shifter by Lioncat6 and Darkutom");
 		int shiftAmount = -320; // Shift down by 320 blocks
 		String myWorld = "C:\\Users\\main\\AppData\\Roaming\\.minecraft\\saves\\newbotw";
-
+		
+		System.out.println("Starting the process of shifting the Minecraft world down by " + shiftAmount + " blocks...");
+		
+		System.out.println("Shifting reigion data (1/2)");
+		
 		File regionDir = new File(myWorld, "region");
 		int totalChunks = 32 * 32 * regionDir.listFiles((dir, name) -> name.endsWith(".mca")).length;
-
-		System.out
-				.println("Starting the process of shifting the Minecraft world down by " + shiftAmount + " blocks...");
-		System.out.println("MC World shifter by Lioncat6 and Darkutom");
-		System.out.println();
 
 		ForkJoinPool forkJoinPool = new ForkJoinPool();
 		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -45,7 +45,8 @@ public class ShiftWorld {
 
 			// Clear the previous line and print the progress bar and active threads
 			System.out.print("\r\033[K"); // Clear the line
-			System.out.printf("Progress: %.2f%% (%d/%d) | Active threads: %d", progress, processed, totalChunks, activeThreads);
+			System.out.printf("Progress: %.2f%% (%d/%d) | Active threads: %d", progress, processed, totalChunks,
+					activeThreads);
 		}, 0, 2, TimeUnit.SECONDS);
 
 		for (File regionFile : regionDir.listFiles((dir, name) -> name.endsWith(".mca"))) {
@@ -68,7 +69,7 @@ public class ShiftWorld {
 		}
 
 		scheduler.shutdown();
-		System.out.println("\nShifting process completed. | " + errorCount + "erros");
+		System.out.println("\nShifting process completed. | " + errorCount + " erros");
 	}
 
 	private static void processRegionFile(File regionFile, int shiftAmount, int totalChunks) throws IOException {
@@ -128,24 +129,34 @@ public class ShiftWorld {
 					.orElseThrow(() -> new IllegalStateException("Y value is missing")) + shiftAmount / 16);
 			sectionData.getValue().put("Y", new ByteTag("Y", yOffset));
 		}
-
-		// Shift the entities
-		chunkData.getAsListTag("entities").ifPresent(entitiesTag -> {
-			entitiesTag.getAsCompoundTagList().ifPresent(entities -> {
-				if (!entities.getValue().isEmpty()) {
-					for (CompoundTag entityData : entities.getValue()) {
-						entityData.getAsListTag("Pos").ifPresent(posTag -> {
-							posTag.getAsDoubleTagList().ifPresent(pos -> {
-								if (pos.getValue().size() > 1) {
-									double newY = pos.getValue().get(1).getValue() + shiftAmount;
-									pos.getValue().set(1, new DoubleTag("Pos", newY));
-								}
-							});
+		// Shift the block ticking
+		chunkData.getAsListTag("block_ticks").ifPresent(blockTicksTag -> {
+			blockTicksTag.getAsCompoundTagList().ifPresent(blockTicks -> {
+				if (!blockTicks.getValue().isEmpty()) {
+					for (CompoundTag blockTickData : blockTicks.getValue()) {
+						blockTickData.getAsIntTag("y").ifPresent(yTag -> {
+							int newY = yTag.getValue() + shiftAmount;
+							blockTickData.getValue().put("y", new IntTag("y", newY));
 						});
 					}
 				}
 			});
 		});
+		// Shift the entities (if for some reason, it exists in the region files [entity data was moved to its own mca files])
+		chunkData.getAsListTag("entities").ifPresent(entitiesTag -> {
+	        entitiesTag.getAsCompoundTagList().ifPresent(entities -> {
+	            for (CompoundTag entityData : entities.getValue()) {
+	                entityData.getAsListTag("Pos").ifPresent(posTag -> {
+	                    posTag.getAsDoubleTagList().ifPresent(pos -> {
+	                        if (pos.getValue().size() > 1) {
+	                            double newY = pos.getValue().get(1).getValue() + shiftAmount;
+	                            pos.getValue().set(1, new DoubleTag("", newY));
+	                        }
+	                    });
+	                });
+	            }
+	        });
+	    });
 		// Shift the block entities
 		chunkData.getAsListTag("block_entities").ifPresent(blockEntitiesTag -> {
 			blockEntitiesTag.getAsCompoundTagList().ifPresent(blockEntities -> {
