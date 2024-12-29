@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
@@ -26,13 +27,14 @@ public class ShiftWorld {
 		System.out.println("MC World shifter by Lioncat6 and Darkutom");
 		int shiftAmount = -320; // Shift down by 320 blocks
 		String myWorld = "C:\\Users\\main\\AppData\\Roaming\\.minecraft\\saves\\newbotw";
-		
-		System.out.println("Starting the process of shifting the Minecraft world down by " + shiftAmount + " blocks...");
-		
+
+		System.out
+				.println("Starting the process of shifting the Minecraft world down by " + shiftAmount + " blocks...");
+
 		System.out.println("Shifting reigion data (1/2)");
-		
+
 		shiftChunks(myWorld, shiftAmount);
-		
+
 		System.out.println("Shifting entity data (2/2)");
 		errorCount.set(0);
 		processedChunks.set(0);
@@ -126,6 +128,7 @@ public class ShiftWorld {
 		scheduler.shutdown();
 		System.out.println("\nEntity shift completed. | " + errorCount + " erros");
 	}
+
 	private static void processRegionFile(File regionFile, int shiftAmount, int totalChunks) throws IOException {
 		HashMap<Integer, Chunk> changedChunks = new HashMap<>();
 		try (RegionFile region = new RegionFile(regionFile.toPath())) {
@@ -172,7 +175,7 @@ public class ShiftWorld {
 			region.writeChunks(changedChunks);
 		}
 	}
-	
+
 	private static void processEntityFile(File regionFile, int shiftAmount, int totalChunks) throws IOException {
 		HashMap<Integer, Chunk> changedChunks = new HashMap<>();
 		try (RegionFile region = new RegionFile(regionFile.toPath())) {
@@ -243,21 +246,22 @@ public class ShiftWorld {
 				}
 			});
 		});
-		// Shift the entities (if for some reason, it exists in the region files [entity data was moved to its own mca files])
+		// Shift the entities (if for some reason, it exists in the region files [entity
+		// data was moved to its own mca files])
 		chunkData.getAsListTag("entities").ifPresent(entitiesTag -> {
-	        entitiesTag.getAsCompoundTagList().ifPresent(entities -> {
-	            for (CompoundTag entityData : entities.getValue()) {
-	                entityData.getAsListTag("Pos").ifPresent(posTag -> {
-	                    posTag.getAsDoubleTagList().ifPresent(pos -> {
-	                        if (pos.getValue().size() > 1) {
-	                            double newY = pos.getValue().get(1).getValue() + shiftAmount;
-	                            pos.getValue().set(1, new DoubleTag("", newY));
-	                        }
-	                    });
-	                });
-	            }
-	        });
-	    });
+			entitiesTag.getAsCompoundTagList().ifPresent(entities -> {
+				for (CompoundTag entityData : entities.getValue()) {
+					entityData.getAsListTag("Pos").ifPresent(posTag -> {
+						posTag.getAsDoubleTagList().ifPresent(pos -> {
+							if (pos.getValue().size() > 1) {
+								double newY = pos.getValue().get(1).getValue() + shiftAmount;
+								pos.getValue().set(1, new DoubleTag("", newY));
+							}
+						});
+					});
+				}
+			});
+		});
 		// Shift the block entities
 		chunkData.getAsListTag("block_entities").ifPresent(blockEntitiesTag -> {
 			blockEntitiesTag.getAsCompoundTagList().ifPresent(blockEntities -> {
@@ -272,18 +276,38 @@ public class ShiftWorld {
 			});
 		});
 	}
-	
+
 	private static void shiftEntitiesDown(CompoundTag chunkData, int shiftAmount) {
 
-		// Shift the entities
-		chunkData.getAsListTag("Entities").ifPresent(entitiesTag -> {
+	    // Shift the entities
+	    chunkData.getAsListTag("Entities").ifPresent(entitiesTag -> {
 	        entitiesTag.getAsCompoundTagList().ifPresent(entities -> {
 	            for (CompoundTag entityData : entities.getValue()) {
+	                // Shift the "Pos" tag
 	                entityData.getAsListTag("Pos").ifPresent(posTag -> {
 	                    posTag.getAsDoubleTagList().ifPresent(pos -> {
 	                        if (pos.getValue().size() > 1) {
 	                            double newY = pos.getValue().get(1).getValue() + shiftAmount;
 	                            pos.getValue().set(1, new DoubleTag("", newY));
+	                            System.out.println("Updated Pos Y: " + newY); // Debug statement
+	                        }
+	                    });
+	                });
+
+	                // Shift the "TileY" tag
+	                entityData.getAsIntTag("TileY").ifPresent(tileYTag -> {
+	                    int newY = tileYTag.getValue() + shiftAmount;
+	                    entityData.getValue().put("TileY", new IntTag("TileY", newY));
+	                    System.out.println("Updated TileY: " + newY); // Debug statement
+	                });
+
+	                // Shift the "Paper.Origin" tag
+	                entityData.getAsListTag("Paper.Origin").ifPresent(originTag -> {
+	                    originTag.getAsDoubleTagList().ifPresent(origin -> {
+	                        if (origin.getValue().size() > 1) {
+	                            double newY = origin.getValue().get(1).getValue() + shiftAmount;
+	                            origin.getValue().set(1, new DoubleTag("", newY));
+	                            System.out.println("Updated Paper.Origin Y: " + newY); // Debug statement
 	                        }
 	                    });
 	                });
@@ -291,4 +315,5 @@ public class ShiftWorld {
 	        });
 	    });
 	}
+
 }
