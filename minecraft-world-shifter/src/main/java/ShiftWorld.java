@@ -41,7 +41,7 @@ public class ShiftWorld {
 		shiftEntities(myWorld, shiftAmount);
 	}
 
-	/**
+	/** 
 	 * @param myWorld
 	 * @param shiftAmount
 	 */
